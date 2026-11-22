@@ -1,0 +1,7 @@
+{
+  "name": "bridge-trainer",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
