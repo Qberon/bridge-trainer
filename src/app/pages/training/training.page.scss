@@ -25,3 +25,18 @@
   .suit { font-size: 16px; line-height: 1.1; }
   &.red { color: #c0392b; }
 }
+
+
+.bid-ok { color: var(--ion-color-success); margin-top: 8px; }
+.bid-err { color: var(--ion-color-danger); margin-top: 8px; }
+
+// Подсветка выбранных кнопок уровня и масти
+ion-button.selected {
+  --background: var(--ion-color-primary);
+  --color: white;
+}
+
+// Цветной символ масти, чтобы ♦ и ♥ читались красными (опционально)
+ion-button .suit {
+  &.red { color: #d32f2f; }
+}

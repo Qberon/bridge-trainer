@@ -5,11 +5,23 @@ const BALANCED = new Set(["4-3-3-3", "4-4-3-2", "5-3-3-2"]);
 
 @Injectable({ providedIn: "root" })
 export class HandEvalService {
+  // ПРАВКА: синглетная фигура (кроме туза) теряет 1 очко.
+  // K/Q/J в синглете переоценены чистым HCP — корректируем прямо здесь,
+  // чтобы truth.hcp и HandInfo.points считали одинаково.
   hcp(pbn: string): number {
-    return pbn
-      .split(".")
-      .flatMap((s) => s.split(""))
-      .reduce((sum, c) => sum + (RANK_VALUE[c] ?? 0), 0);
+    let total = 0;
+    for (const cards of pbn.split(".")) {
+      if (!cards) continue; // ренонс: фигур нет, поправка не нужна
+      const singleton = cards.length === 1;
+      for (const c of cards) {
+        let value = RANK_VALUE[c] ?? 0;
+        if (singleton && value > 0 && c !== "A") {
+          value -= 1; // синглетная фигура K/Q/J: минус одно очко
+        }
+        total += value;
+      }
+    }
+    return total;
   }
 
   shape(pbn: string): number[] {

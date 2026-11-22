@@ -15,9 +15,14 @@
     </div>
   </div>
 
-  <ion-item lines="none" class="ion-margin-top">
-    <ion-label position="stacked">Сколько HCP?</ion-label>
-    <ion-input type="number" [(ngModel)]="hcpAnswer"></ion-input>
+  <ion-item lines="none">
+    <ion-input
+      [(ngModel)]="hcpAnswer"
+      type="number"
+      placeholder="Введите HCP"
+      inputmode="numeric"
+      style="--padding-start: 8px;">
+    </ion-input>
   </ion-item>
 
   <ion-item lines="none">
@@ -25,7 +30,47 @@
     <ion-checkbox [(ngModel)]="balAnswer"></ion-checkbox>
   </ion-item>
 
-  <!-- Кнопка теперь показывает результат прямо на экране -->
   <ion-button expand="block" (click)="check()" class="ion-margin-top">Проверить</ion-button>
+
+  <!-- Торговля: три ряда -->
+  <ion-grid class="bid-grid">
+    <ion-row>
+      <ion-col size="12">
+        <ion-button expand="block" fill="outline" (click)="bidPass()">Пас</ion-button>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col size="12/7" *ngFor="let lvl of levels">
+        <ion-button
+          expand="block" fill="outline"
+          [class.selected]="selLevel === lvl"
+          (click)="selectLevel(lvl)">{{ lvl }}</ion-button>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col size="2" *ngFor="let s of suits">
+        <ion-button
+          expand="block" fill="outline"
+          [class.selected]="selSuit === s.key"
+          (click)="selectSuit(s.key)">{{ s.symbol }}</ion-button>
+      </ion-col>
+      <ion-col size="2">
+        <ion-button
+          expand="block" fill="outline"
+          [class.selected]="selIsNT"
+          (click)="selectNT()">БК</ion-button>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col size="12">
+        <ion-button expand="block" color="primary" [disabled]="!canSubmit" (click)="submitBid()">Заявка</ion-button>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+  <div *ngIf="bidOk !== null" [ngClass]="bidOk ? 'bid-ok' : 'bid-err'">
+    {{ bidFeedback }}
+  </div>
+
   <ion-button expand="block" fill="outline" (click)="newDeal()">Новая сдача</ion-button>
 </ion-content>
