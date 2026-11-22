@@ -1,0 +1,31 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Bridge Trainer</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="hand-label">Ваша рука (South)</div>
+  <div class="hand">
+    <div class="suit-row" *ngFor="let row of myHand">
+      <div class="card" *ngFor="let c of row" [class.red]="c.red">
+        <span class="rank">{{ c.rank }}</span>
+        <span class="suit">{{ c.suit }}</span>
+      </div>
+    </div>
+  </div>
+
+  <ion-item lines="none" class="ion-margin-top">
+    <ion-label position="stacked">Сколько HCP?</ion-label>
+    <ion-input type="number" [(ngModel)]="hcpAnswer"></ion-input>
+  </ion-item>
+
+  <ion-item lines="none">
+    <ion-label>Равномерный расклад?</ion-label>
+    <ion-checkbox [(ngModel)]="balAnswer"></ion-checkbox>
+  </ion-item>
+
+  <!-- Кнопка теперь показывает результат прямо на экране -->
+  <ion-button expand="block" (click)="check()" class="ion-margin-top">Проверить</ion-button>
+  <ion-button expand="block" fill="outline" (click)="newDeal()">Новая сдача</ion-button>
+</ion-content>

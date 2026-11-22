@@ -1,0 +1,27 @@
+.hand-label {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.suit-row {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 4px;
+}
+
+.card {
+  width: 38px;
+  height: 54px;
+  background: #fff;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  color: #1a1a1a;
+
+  .rank { font-size: 14px; font-weight: 700; line-height: 1.1; }
+  .suit { font-size: 16px; line-height: 1.1; }
+  &.red { color: #c0392b; }
+}
