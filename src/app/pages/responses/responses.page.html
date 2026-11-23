@@ -1,0 +1,83 @@
+<ion-content class="ion-padding">
+  <div class="hand-label">Партнёр открыл 1♥. Ваша рука</div>
+
+<!-- Рука открывающего: показывается после первой заявки -->
+<div *ngIf="bidOk !== null">
+  <div class="hand-label opener-label">Рука открывающего (North)</div>
+  <div class="hand opener-hand">
+    <div class="suit-row" *ngFor="let row of openerHandVm">
+      <div class="card" *ngFor="let c of row" [class.red]="c.red">
+        <span class="rank">{{ c.rank }}</span>
+        <span class="suit">{{ c.suit }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <div class="hand-stats" (click)="revealStats()" [class.hidden-stats]="!statsRevealed">
+    <span *ngIf="statsRevealed">Очки: {{ hand.points }} · червы: {{ hand.lengths.H }}</span>
+    <span *ngIf="!statsRevealed" class="stats-hint">Посчитай сам — нажми, чтобы проверить 🔒</span>
+  </div>
+
+  <div class="hand">
+    <div class="suit-row" *ngFor="let row of myHand">
+      <div class="card" *ngFor="let c of row" [class.red]="c.red">
+        <span class="rank">{{ c.rank }}</span>
+        <span class="suit">{{ c.suit }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Торговля: три ряда -->
+  <ion-grid class="bid-grid">
+    <ion-row>
+      <ion-col size="12">
+        <ion-button expand="block" fill="outline" (click)="bidPass()">Пас</ion-button>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col size="12/7" *ngFor="let lvl of levels">
+        <ion-button
+          expand="block" fill="outline"
+          [class.selected]="selLevel === lvl"
+          (click)="selectLevel(lvl)">{{ lvl }}</ion-button>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col size="2" *ngFor="let s of suits">
+        <ion-button
+          expand="block" fill="outline"
+          [class.selected]="selSuit === s.key"
+          (click)="selectSuit(s.key)">{{ s.symbol }}</ion-button>
+      </ion-col>
+      <ion-col size="2">
+        <ion-button
+          expand="block" fill="outline"
+          [class.selected]="selIsNT"
+          (click)="selectNT()">БК</ion-button>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col size="12">
+        <ion-button expand="block" color="primary" [disabled]="!canSubmit" (click)="submitBid()">Заявка</ion-button>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+  <div *ngIf="bidOk !== null" [ngClass]="bidOk ? 'bid-ok' : 'bid-err'">
+    {{ bidFeedback }}
+  </div>
+
+  <ion-button expand="block" fill="outline" (click)="newDeal()">Новая сдача</ion-button>
+
+  <ion-button
+    expand="block" fill="outline" color="warning"
+    *ngIf="mistakeCount + correctCount > 0"
+    (click)="exportMistakes()">
+    Ошибок: {{ mistakeCount }} · Верно: {{ correctCount }}
+  </ion-button>
+
+  <ion-button *ngIf="mistakeCount + correctCount > 0" expand="block" fill="outline" color="medium" (click)="clearMistakes()">
+    Очистить
+  </ion-button>
+</ion-content>

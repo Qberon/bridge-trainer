@@ -2,15 +2,15 @@ import { Component, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import {
-  IonButton, IonContent, IonHeader, IonTitle, IonToolbar,
-  IonItem, IonInput, IonLabel, IonCheckbox,
+  IonButton, IonContent, // IonHeader, IonTitle, IonToolbar,
+  //IonItem, IonInput, IonLabel, IonCheckbox,
   IonGrid, IonRow, IonCol, IonItemDivider,
 } from "@ionic/angular";
 import { ToastController } from "@ionic/angular";
 import { DealGeneratorService, Deal } from "../../core/deal-generator.service";
 import { HandEvalService } from "../../core/hand-eval.service";
 import { checkBid, HandInfo, Bid, Suit } from "../../core/bid-validator";
-
+import { MistakeLogService, LogContext } from "../../core/mistake-log.service"; // <-- не забудь этот импорт
 
 interface CardVm {
   rank: string;
@@ -24,8 +24,8 @@ interface CardVm {
   imports: [
     CommonModule,
     FormsModule,
-    IonButton, IonContent, IonHeader, IonTitle, IonToolbar,
-    IonItem, IonInput, IonLabel, IonCheckbox,
+    IonButton, IonContent, // IonHeader, IonTitle, IonToolbar,
+    //IonItem, IonInput, IonLabel, IonCheckbox,
     IonGrid, IonRow, IonCol,
   ],
   templateUrl: "./training.page.html",
@@ -35,17 +35,19 @@ export class TrainingPage {
   private dealGen = inject(DealGeneratorService);
   private evalSvc = inject(HandEvalService);
   private toastCtrl = inject(ToastController);
+  private mistakes = inject(MistakeLogService);  
+  private readonly ctx: LogContext = "openings";
 
   deal: Deal = this.dealGen.generateDeal();
   hcpAnswer: string = "";      // храним как строку, парсим при проверке
   balAnswer: boolean = false;  // чекбокс сразу даёт boolean
   bidFeedback: string = "";
   bidOk: boolean | null = null;
-
+  
   get myHand(): CardVm[][] {
     return this.toHand(this.deal.S);
   }
-
+  
   get truth(): { hcp: number; balanced: boolean; shape: string } {
     const pbn = this.deal.S;
     return {
@@ -54,7 +56,7 @@ export class TrainingPage {
       shape: this.evalSvc.shape(pbn).join("-"),
     };
   }
-
+  
   newDeal(): void {
     this.deal = this.dealGen.generateDeal();
     this.hcpAnswer = "";
@@ -65,9 +67,11 @@ export class TrainingPage {
     this.selSuit = null;
     this.selIsNT = false;
   }
-
+  
+  clearMistakes(): void { this.mistakes.clear(this.ctx); }
+  
   bid(bid: Bid): void { void this.makeBid(bid); }
-
+  
   private toHandInfo(): HandInfo {
     const parts = this.deal.S.split("."); // [S, H, D, C] — тот же порядок, что в toHand
     return {
@@ -80,28 +84,74 @@ export class TrainingPage {
       },
     };
   }
-
-  async makeBid(bid: Bid): Promise<void> {
-    const result = checkBid(this.toHandInfo(), bid);
+  
+  private async makeBid(bid: Bid): Promise<void> {
+    const info = this.toHandInfo();          // информация о руке — считаем один раз
+    const result = checkBid(info, bid);
+    
+    if (!result.ok) {
+      this.mistakes.saveMistake(this.ctx, this.deal.S, bid, result.expected, info);
+    } else {
+      this.mistakes.saveCorrect(this.ctx, this.deal.S, bid, info);
+    }
+    
     this.bidFeedback = result.message;
     this.bidOk = result.ok;
     //await this.presentToast(result.message, result.ok ? "success" : "danger");
   }
+  
+  get mistakeCount(): number { return this.mistakes.mistakeCount(this.ctx); }
+  get correctCount(): number { return this.mistakes.correctCount(this.ctx); }
 
+  
+  exportMistakes(): void {
+    const mistakes = this.mistakes.getAllParsedMistakes(this.ctx);
+    const correct = this.mistakes.getAllParsedCorrect(this.ctx);
+    if (mistakes.length === 0 && correct.length === 0) return;
+    
+    const parts: string[] = [];
+    
+    if (mistakes.length > 0) {
+      parts.push([
+        ["Журнал ошибок"],
+        ["Дата", "Расклад", "Ваша заявка", "По схеме", "Очки", "Формула"].join("\t"),
+        ...mistakes.map(r => [r.date, r.pbn, r.made, r.expected, r.points, r.shape].join("\t")),
+      ].join("\n"));
+    }
+    
+    if (correct.length > 0) {
+      parts.push([
+        ["Журнал правильных ответов"],
+        ["Дата", "Расклад", "Заявка", "Очки", "Формула"].join("\t"),
+        ...correct.map(r => [r.date, r.pbn, r.bid, r.points, r.shape].join("\t")),
+      ].join("\n"));
+    }
+    
+    const text = parts.join("\n\n") + "\n";
+    
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "bridge-trainer-log.tsv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }  
+  
   async check(): Promise<void> {
     const hcp = Number(this.hcpAnswer);
     const truth = this.truth;
-
+    
     // Проверка: число валидно и совпадает, и расклад совпадает
     const isCorrect = !isNaN(hcp) && hcp === truth.hcp && this.balAnswer === truth.balanced;
-
+    
     const message = isCorrect
-      ? "🎉 Верно! Отличная работа!"
-      : `❌ Ошибка. На самом деле: ${truth.hcp} HCP, форма ${truth.shape}, ${truth.balanced ? "равномерный" : "неравномерный"}`;
-
+    ? "🎉 Верно! Отличная работа!"
+    : `❌ Ошибка. На самом деле: ${truth.hcp} HCP, форма ${truth.shape}, ${truth.balanced ? "равномерный" : "неравномерный"}`;
+    
     await this.presentToast(message, isCorrect ? "success" : "danger");
   }
-
+  
   async presentToast(message: string, color: "success" | "danger" = "success"): Promise<void> {
     const toast = await this.toastCtrl.create({
       message,
@@ -111,7 +161,7 @@ export class TrainingPage {
     });
     await toast.present();
   }
-
+  
   private toHand(pbn: string): CardVm[][] {
     const symbols: Record<string, string> = { S: "\u2660", H: "\u2665", D: "\u2666", C: "\u2663" };
     const red = new Set(["H", "D"]);
@@ -123,11 +173,11 @@ export class TrainingPage {
       return cards.split("").map((rank) => ({ rank: displayRank[rank] ?? rank, red: red.has(suit), suit: symbols[suit] }));
     });
   }
-
+  
   selLevel: number | null = null;
   selSuit: Suit | null = null;
   selIsNT = false;
-
+  
   readonly levels = [1, 2, 3, 4, 5, 6, 7];
   readonly suits = [
     { key: 'C' as Suit, symbol: '♣' },
@@ -135,37 +185,37 @@ export class TrainingPage {
     { key: 'H' as Suit, symbol: '♥' },
     { key: 'S' as Suit, symbol: '♠' },
   ];
-
+  
   // Заявку можно отправить только с полным набором: уровень + масть или уровень + БК
   get canSubmit(): boolean {
     return this.selLevel !== null && (this.selSuit !== null || this.selIsNT);
   }
-
+  
   selectLevel(lvl: number): void {
     this.selLevel = lvl;
   }
-
+  
   selectSuit(s: Suit): void {
     this.selSuit = s;
     this.selIsNT = false; // масть и БК взаимоисключающие
   }
-
+  
   selectNT(): void {
     this.selIsNT = true;
     this.selSuit = null;
   }
-
+  
   bidPass(): void {
     // Пас отправляется сразу, без кнопки «Заявка»
     void this.makeBid({ type: 'PASS' });
   }
-
+  
   submitBid(): void {
     if (!this.canSubmit) return;
     const bid: Bid = this.selIsNT
-      ? { type: 'NT', level: this.selLevel! }
-      : { type: 'SUIT', level: this.selLevel!, suit: this.selSuit! };
+    ? { type: 'NT', level: this.selLevel! }
+    : { type: 'SUIT', level: this.selLevel!, suit: this.selSuit! };
     void this.makeBid(bid);
   }
-
+  
 }

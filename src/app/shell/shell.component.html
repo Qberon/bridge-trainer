@@ -1,0 +1,21 @@
+<div class="shell">
+  <header class="topbar">
+    <button class="burger" (click)="drawerOpen = !drawerOpen" aria-label="Меню">☰</button>
+    <span class="title">Bridge Trainer</span>
+  </header>
+
+  @if (drawerOpen) {
+    <div class="backdrop" (click)="drawerOpen = false"></div>
+  }
+
+  <nav class="drawer" [class.open]="drawerOpen">
+    <a routerLink="/training" routerLinkActive="active" (click)="drawerOpen = false">Открытия</a>
+    <a routerLink="/responses" routerLinkActive="active" (click)="drawerOpen = false">Ответы на 1♥</a>
+    <a routerLink="/stats" routerLinkActive="active" (click)="drawerOpen = false">Статистика</a>
+  </nav>
+
+  <main class="content">
+    <!-- именно Ionic-outlet, без ng-content -->
+    <ion-router-outlet></ion-router-outlet>
+  </main>
+</div>
