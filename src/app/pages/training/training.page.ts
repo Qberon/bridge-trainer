@@ -9,7 +9,7 @@ import {
 import { ToastController } from "@ionic/angular";
 import { DealGeneratorService, Deal } from "../../core/deal-generator.service";
 import { HandEvalService } from "../../core/hand-eval.service";
-import { checkBid, HandInfo, Bid, Suit } from "../../core/bid-validator";
+import { checkBid, HandInfo, Bid, Suit } from "../../core/bidding";
 import { MistakeLogService, LogContext } from "../../core/mistake-log.service"; // <-- не забудь этот импорт
 
 interface CardVm {

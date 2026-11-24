@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { Bid, describeBid, HandInfo } from "./bid-validator";
+import { Bid, describeBid, HandInfo } from "./bidding";
 
 export type LogContext = "openings" | "responses";
 

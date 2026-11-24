@@ -5,7 +5,7 @@ import { IonButton, IonContent, IonGrid, IonRow, IonCol } from "@ionic/angular";
 import {
     Card, HandInfo, Bid, Suit, SUITS,
     checkResponse1H, canOpen1H,
-} from "../../core/bid-validator";
+} from "../../core/bidding";
 import { MistakeLogService, LogContext } from "../../core/mistake-log.service"; // <-- не забудь этот импорт
 import { HandEvalService } from "../../core/hand-eval.service";
 
